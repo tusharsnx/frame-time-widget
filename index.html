@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Time Widget</title>
+</head>
+
+<body>
+    <style>
+        .test-video {
+            position: relative;
+            left: 0px;
+            margin-block: 1500px;
+            width: 80vw;
+            aspect-ratio: 16 / 9;
+        }
+
+        .farDiv {
+            position: absolute;
+            left: 0px;
+            top: 5000px;
+        }
+
+        body {
+            background-image: url("https://upload.wikimedia.org/wikipedia/commons/3/3b/Xena15weeks2.jpg");
+            background-repeat: repeat;
+        }
+    </style>
+
+    <div class="test-video">
+        <video loop controls>
+            <source
+                src="https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.360p.vp9.webm"
+                type="video/webm">
+        </video>
+    </div>
+
+    <script>
+        function addWidgetUI() {
+            const frameTimeWidget = document.createElement("div");
+            frameTimeWidget.id = "frame-time-widget";
+            frameTimeWidget.innerText = "Frame Time: 0.0ms";
+
+            // Add initial styles
+            frameTimeWidget.style.position = "fixed";
+            frameTimeWidget.style.bottom = "0px";
+            frameTimeWidget.style.right = "0px";
+            frameTimeWidget.style.color = "white";
+            frameTimeWidget.style.backgroundColor = "black";
+            frameTimeWidget.style.fontSize = "2.5rem";
+            frameTimeWidget.style.zIndex = "1000";
+
+            document.body.appendChild(frameTimeWidget);
+            return frameTimeWidget;
+        }
+
+        function startWidgetUpdate(frameTimeWidget, videoElement) {
+            const WidgetUpdateDelay = 500;
+            // const videoElement = document.querySelector("iframe").contentDocument.querySelector("video");
+            const initialQuality = videoElement.getVideoPlaybackQuality();
+            let lastUpdateTime = performance.now();
+            let lastFrameCount = initialQuality.totalVideoFrames
+
+            function update() {
+                const quality = videoElement.getVideoPlaybackQuality();
+
+                const currentFrameCount = quality.totalVideoFrames;
+                const frames = currentFrameCount - lastFrameCount;
+                lastFrameCount = currentFrameCount
+
+                const currentTime = performance.now();
+                const duration = currentTime - lastUpdateTime;
+                lastUpdateTime = currentTime;
+
+                let avgFrameDuration = duration / frames;
+
+                if (Number.isFinite(avgFrameDuration)) {
+                    frameTimeWidget.innerText = `Frame Time: ${avgFrameDuration.toFixed(2)}ms Dropped Frames: ${quality.droppedVideoFrames}`;
+                    frameTimeWidget.style.color = avgFrameDuration > 16.67 * 1.05 ? "red" : "white";
+                } else {
+                    frameTimeWidget.innerText = `Frame Time: --- ms Dropped Frames: ${quality.droppedVideoFrames}`;
+                    frameTimeWidget.style.color = "white";
+                }
+
+                setTimeout(update, WidgetUpdateDelay);
+            }
+
+            setTimeout(update, WidgetUpdateDelay);
+        }
+
+        const frameTimeWidget = addWidgetUI();
+        startWidgetUpdate(frameTimeWidget);
+    </script>
+
+</body>
+
+</html>
